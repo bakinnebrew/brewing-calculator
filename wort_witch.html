@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <title>Wort Witch</title>
+  </head>
+  <style>
+  body{
+    background-color: lightgray;
+    font-family: 'Courier New', Courier, monospace;
+    text-align: center;
+  }
+
+  button {
+    font-family: 'Courier New', Courier, monospace;
+  }
+  </style>
+  <body>
+    <div id="app"></div>
+    <script type = "text/babel">
+
+      // class Combination extends React.Component{
+      //   constructor(props){
+      //     super(props);
+      //     this.state = {
+      //       current_concentration: 0,
+      //       current_volume: 0,
+      //       second_concentration: "",
+      //       second_volume: "",
+      //       final_
+      //     }
+
+      //   }
+      // }
+
+      class StrikeWater extends React.Component{
+        constructor(props){
+          super(props);
+          this.state = {
+            mash_temp: 0,
+            grain_temp: 0,
+            thickness: 0,
+            tempUnits: "",
+            result: 0,
+          }
+        }
+
+        render() {
+          if(this.state.result !== 0){
+            var result_tag = "Strike Water: " + this.state.result + this.state.tempUnits
+          }
+          return(
+            <div>
+              <div className = "form-group">
+                <form>
+                  <label> Temperature Units </label>
+                    <select onChange={this.updateTempUnit}>
+                      <option value=""> </option>
+                      <option value="°F">Fahrenheit</option>
+                      <option value="°C">Celsius</option>
+                    </select>
+                  <input type="number" onChange={this.updateMashTemp} placeholder = "Desired Mash Temp" />
+                  <input type="number" onChange={this.updateGrainTemp} placeholder = "Grain Temp"/>
+                  <div>
+                    <label> Mash Thickness </label>
+                    <select onChange={this.updateThickness}>
+                          <option value=""> </option>
+                          <option value="Thin">Thin</option>
+                          <option value="Average Thickness">Average Thickness</option>
+                          <option value="Thick">Thick</option>
+                    </select>
+                  </div>
+                </form>
+                <button onClick={this.calculateStrikeWater}> Calculate Strike Water Temp </button>
+              </div>
+              <h4> {result_tag}  </h4>
+            </div>
+          )
+        }
+        // ((.4*(strike_temp - grain_temp))/thickness) + strike_temp;
+
+        calculateStrikeWater = () => {
+          const calculation = parseFloat(((.4*(this.state.mash_temp - this.state.grain_temp))/this.state.thickness) + this.state.mash_temp)
+          const mash_temp = parseFloat(this.state.mash_temp)
+          const value = (mash_temp + calculation).toFixed(1)
+     
+          this.setState({
+            result: value
+          })
+
+        }
+        updateTempUnit = (event) => {
+          this.setState({
+            tempUnits: event.target.value
+          })
+        }
+        updateMashTemp = (event) => {
+          this.setState({
+            mash_temp: event.target.value
+          })
+        }
+
+        updateGrainTemp = (event) => {
+          this.setState({
+            grain_temp: event.target.value
+          })
+        }
+
+        updateThickness = (event) => {
+          if(event.target.value === "Thin"){
+            this.setState({
+              thickness: 3.25
+            })
+          }
+          else if(event.target.value === "Average Thickness"){
+            this.setState({
+              thickness: 3
+            })
+          }
+          else if( event.target.value === "Thick"){
+            this.setState({
+              thickness: 2.75
+            })
+          }
+        }
+      }
+
+      class Dillution extends React.Component {
+        constructor(props){
+          super(props);
+          this.state = {
+            unit: "",
+            concentration1: 0,
+            concentration2: "",
+            volume1: 0,
+            volume2: "",
+            result: 0,
+            formula: 0,
+          }
+        }
+        
+        render() {
+          if(this.state.formula === 1){
+            var result_tag = "Expected concentration at the desired volume: " + this.state.result
+          }
+          if(this.state.formula === 2){
+            var result_tag = "Your volume needs to be at " + this.state.result + " to have a concentration of " + this.state.concentration2
+          }
+
+          return (
+            <div>
+              <div className="form-group">
+                <form>
+                  <label> Unit to Dillute </label>
+                  <input type="text" onChange={this.updateDillutionUnit} placeholder="beer, Iso., pH, etc."/>
+                  <div>
+                    <div>
+                    C1: <input type="number" onChange={this.updateC1} placeholder="5"/>
+                    C2: <input type="number" onChange={this.updateC2} placeholder="6"/>
+                    </div>
+                    <div>
+                    V1: <input type="number" onChange={this.updateV1} placeholder="100"/>
+                    V2: <input type="number" onChange={this.updateV2} placeholder="50"/>
+                    </div>
+                  </div>
+                </form>
+                <button onClick={this.makeDillution}> Make Dillution! </button>
+                <h4> {result_tag} </h4>
+              </div>
+            </div>
+          )
+        }
+        makeDillution = () => {
+          if(this.state.volume2 !== "" && this.state.concentration2 !== ""){
+            alert("You must leave either the 2nd concentation or 2nd volume blank")
+            return 1;
+          }
+          else{
+            const vol2 = parseFloat(this.state.volume2)
+            const con2 = parseFloat(this.state.concentration2)
+
+            if(this.state.concentration2 === ""){
+              const calculation = ((this.state.concentration1 * vol2)/this.state.volume1).toFixed(1)
+              const value = this.state.concentration1 - (calculation - this.state.concentration1)
+              this.setState({
+                result: value,
+                formula: 1
+              })
+            }
+            else{
+              const calculation = ((this.state.volume1 * con2)/this.state.concentration1).toFixed(1)
+              const value = this.state.volume1 - (calculation - this.state.volume1)
+              console.log(calculation)
+              console.log(this.state.volume1)
+              this.setState({
+                result: value,
+                formula: 2
+              })
+            }
+          }
+          
+        }
+
+        updateDillutionUnit = (event) => {
+          this.setState({
+            unit: event.target.value
+          })
+        }
+
+        updateC1 = (event) => {
+          this.setState({
+            concentration1: event.target.value
+          })
+        }
+        updateC2 = (event) => {
+          this.setState({
+            concentration2: event.target.value
+          })
+        }
+        updateV2 = (event) => {
+          this.setState({
+            volume2: event.target.value
+          })
+        }
+
+        updateV1 = (event) => {
+          this.setState({
+            volume1: event.target.value
+          })
+        }
+      }
+
+      class YeastNeeded extends React.Component {
+        constructor(props){
+          super(props);
+          this.state = {
+            plato: 0,
+            batch_size: 0,
+            batch_units: "",
+            beer_style: "",
+            gravity_units: "",
+            current_yeast_concentration: 0,
+            what_you_need: 0,
+            what_you_have: 0,
+            quantity_units: "",
+            yeast_needed: 0,
+            calculated: false,
+            conversionUnit: "Liters"
+          }
+        }
+
+        render() {
+          return (
+            <div>
+                <div className="form-group">
+                  <form>
+                    <label>Batch Size Units </label>
+                        <select onChange={this.updateBatchUnits}>
+                            <option value=""> </option>
+                            <option value="Gallons">Gallons</option>
+                            <option value="Barrels">Barrels</option>
+                            <option value="Liters">Liters</option>
+                        </select>
+                    <input onChange={this.updateBatchSize} type="number" placeholder="e.g., 100" />
+                    <div>
+                    <label>Gravity Units </label>
+                        <select onChange={this.updateUnits}>
+                            <option value=""> </option>
+                            <option value="Specific Gravity">Specific Gravity</option>
+                            <option value="Plato">Plato</option>
+                        </select>
+                        <input onChange={this.updatePlato} type="number" placeholder="e.g., 12 or 1.048" />
+                    </div>
+                    <div>
+                    <label>Beer Style</label>
+                        <select onChange={this.updateStyle}>
+                            <option value=""> </option>
+                            <option value="Ale">Ale</option>
+                            <option value="Lager">Lager</option>
+                        </select>
+                    </div>
+                    <div>
+                      <p>Amount of cells per mL </p>
+                      <input type="number" onChange={this.updateQuantity} placeholder="e.g., 1000" />
+                    </div>
+                  </form>
+                  <button onClick={this.runCalculation}> Run Calculation </button>
+                  <h1>Quantity Needed: {this.state.yeast_needed} {this.state.conversionUnit} </h1>
+                  <label> Convert </label>
+                        <select onChange={this.updateFinalConversion}>
+                            <option value="Liters">Liters</option>
+                            <option value="mLs">mLs</option>
+                            <option value="Gallons">Gallons</option>
+                            <option value="Barrels">Barrels</option>
+                        </select>
+                </div>
+            </div>
+          )
+        }
+
+        runCalculation = () => {
+          const yeast_value = this.convertBatchSize();
+          const grav_value = this.convertGravity();
+          const style_value = this.cellsbyStyle();
+          const needed_amount = (yeast_value * grav_value * style_value).toFixed(0)
+          const final_value_in_liters = ((needed_amount/this.state.current_yeast_concentration)/1000).toFixed(1)
+          
+           this.setState({
+            what_you_need: needed_amount,
+            yeast_needed: final_value_in_liters,
+            what_you_have: final_value_in_liters,
+            calculated: true
+          })
+
+        }
+
+        updateFinalConversion = (event) => {
+          if(event.target.value === "Gallons"){
+            const value = (this.state.what_you_have / 3.785).toFixed(1)
+            this.setState({
+            yeast_needed: value,
+            conversionUnit: event.target.value
+          })
+        }
+          else if(event.target.value === "Barrels"){
+            const value = (this.state.what_you_have / 3.785 / 31).toFixed(1)
+            this.setState({
+            yeast_needed: value,
+            conversionUnit: event.target.value
+          })
+          }
+          else if(event.target.value === "mLs"){
+            const value = (this.state.what_you_have * 1000).toFixed(0)
+            this.setState({
+            yeast_needed: value,
+            conversionUnit: event.target.value
+          })
+          }
+          else if(event.target.value === "Liters" || this.state.conversionUnit === "Liters"){ 
+            const value = this.state.what_you_have
+            this.setState({
+            yeast_needed: value,
+            conversionUnit: event.target.value
+          })
+
+          }
+        }
+
+        updateStyle = (event) => {
+          this.setState({
+            beer_style: event.target.value
+          })
+        }
+
+        updateQuantity = (event) => {
+          this.setState({
+            current_yeast_concentration: event.target.value
+          })
+        }
+
+        updateBatchUnits = (event) => {
+          this.setState({
+            batch_units: event.target.value
+          })
+        }
+
+        updateUnits = (event) => {
+          this.setState({
+            gravity_units: event.target.value
+          })
+        }
+
+        updateBatchSize = (event) => {
+          this.setState({
+            batch_size: event.target.value
+          })
+        }
+
+        updatePlato = (event) => {
+          this.setState({
+            plato: event.target.value
+          })
+        }
+        convertBatchSize = () => {
+        if(this.state.batch_units !== ""){
+          if(this.state.batch_units === "Gallons"){
+            const value = (this.state.batch_size * 3.785) * 1000;
+            return value;
+          }
+          else if(this.state.batch_units === "Liters"){
+            const value = (this.state.batch_size * 1000);
+            return value;
+          }
+          else{
+            const value = (((this.state.batch_size * 31) * 3.785) * 1000);
+            return value;
+          }
+        }
+      }
+
+        convertGravity = () => {
+          if(this.state.gravity_units === "Specific Gravity"){
+              const state_value = this.state.plato
+              const value = [(state_value- 1) * 1000] / 4
+              return value;
+
+              this.setState({
+                plato: value
+              })
+            }
+          else{
+            const value = this.state.plato;
+            return value;
+          }
+        }
+
+        cellsbyStyle = () => {
+          if(this.state.plato > 16 || this.state.beer_style === "Lager"){
+            const value = 1500000
+            return value;
+           
+          }
+          else{
+            const value = 1000000
+            return value;
+           
+          }
+        }
+      }
+
+
+      class EstimatedABV extends React.Component {
+
+        constructor(props){
+          super(props);
+          this.state = {
+            OG: "",
+            FG: "",
+            format: "",
+            estimated_abv: 0 + "%"
+
+          }
+        }
+        
+        render(){
+          return (
+            <div>
+                <div className="form-group">
+                  <form>
+                    <div className="form-group">
+                      <label>Measurement System: </label>
+                        <select id="conversion-type" onChange={this.updateResponse}>
+                            <option value=""> </option>
+                            <option value="Specific Gravity">Specific Gravity</option>
+                            <option value="Plato">Plato</option>
+                        </select>
+                      </div>
+                    <input onChange={this.updateVal1} id="numer-box" type="number" placeholder="Starting Gravity" value={this.state.OG}/>
+                    <input onChange={this.updateVal2} id="numer-box" type="number" placeholder= "Estimated Final Gravity" value={this.state.FG}/>
+                  </form>
+                </div>
+                <button onClick ={this.calculateEstimatedABV}> Calculate Estimated ABV </button>
+                <h1> {this.state.estimated_abv} </h1>
+            </div>
+          )
+        }
+        updateResponse = (event) => {
+          this.setState({
+            format: event.target.value,
+            OG: "",
+            FG: "",
+            estimated_abv: ""
+          })
+        }
+
+        updateVal1 = (event) => {
+          this.setState({
+            OG: event.target.value
+          })
+        }
+
+        updateVal2 = (event) => {
+          this.setState({
+            FG: event.target.value
+          })
+        }
+
+        calculateEstimatedABV = () => {
+          if(this.state.format === "Plato"){
+            const OGarray = ["1.0"];
+            const FGarray = ["1.0"];
+
+            const plato_value1 = this.state.OG * 4;
+            OGarray.push(plato_value1);
+            const plato_value2 = this.state.FG * 4;
+            if(plato_value2 < 10 ){
+              FGarray.push("0")
+            }
+            FGarray.push(plato_value2);
+            console.log(OGarray)
+
+            const val1 = OGarray.join('');
+            const val2 = FGarray.join('');
+            console.log(val1)
+            console.log(typeof val1)
+
+            const value1 = parseFloat(val1)
+            const value2 = parseFloat(val2)
+            const value3 = (value1 - value2) * 131.5;
+       
+            const final_value = value3.toFixed(1) + "%"
+            this.setState({
+            estimated_abv: final_value
+          })
+
+          }
+          else{
+            const value1 = parseFloat(this.state.OG);
+            const value2 = parseFloat(this.state.FG);
+            const value3 = (value1 - value2) * 131.5;
+
+            const final_value = value3.toFixed(1) + "%"
+            this.setState({
+            estimated_abv: final_value
+          })
+          }
+        }
+      }
+
+     
+      class App extends React.Component { 
+
+        constructor(props){
+          super(props);
+          this.state = {
+            view:"",
+          }
+        }
+        // depending on choice, we can render a different component
+
+
+        render(){
+          // if(this.state.view === "Estimated ABV"){
+          //   var calculationView = <EstimatedABV />
+          // }
+          // else
+
+          let view = this.state.view 
+          switch(view) {
+            case "Estimated ABV":
+              var calculationView = <EstimatedABV />
+              break;
+            case "Yeast Needed":
+              var calculationView = <YeastNeeded />
+              break;
+            case "Dillution":
+              var calculationView = <Dillution />
+              break;
+            case "Strike Water":
+              var calculationView = <StrikeWater />
+              break;
+            case "Combination":
+              var calculationView = "TODO"
+              break;
+            default:
+              var calculationView = ""
+          }
+
+            return (
+                <div id="main-box">
+                    <h1>Wort Witch</h1>
+                    <form>
+                      <div className="form-group">
+                      <label>Calculation:</label>
+                        <select id="calculation-view" onChange={this.updateResponse}>
+                            <option value=""> </option>
+                            <option value="Dillution">Dillution</option>
+                            <option value="Yeast Needed">Yeast Pitch Amount</option>
+                            <option value="Strike Water">Strike Water</option>
+                            <option value="Estimated ABV">Estimated ABV</option>
+                            <option value="Combination">Combination</option>
+                        </select>
+                      </div>
+                    </form>
+                    <h2>{this.state.view} </h2>
+                    <div>
+                        {calculationView}
+                    </div>
+                </div>
+            )
+    }
+
+    updateResponse = () => {
+      this.setState({
+        view: event.target.value,
+        estimated_abv: true
+      })
+    }
+}
+
+    ReactDOM.render(<App />, document.querySelector('#app'))
+    </script>
+  </body>
+</html>
+
+<!-- A few different features -->
+<!-- Estimated ABV  -->
+<!-- amount of yeat needed -->
+<!-- dillution formula -->
+<!-- strike water -->
