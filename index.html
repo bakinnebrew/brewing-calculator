@@ -4,18 +4,45 @@
     <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <title>Wort Witch</title>
   </head>
   <style>
-  body{
+  html, body{
     background-color: lightgray;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: sans-serif;
     text-align: center;
   }
 
   button {
-    font-family: 'Courier New', Courier, monospace;
+    font-family: sans-serif;
+    border-radius: 5px;
   }
+
+  input {
+   margin-top: 10px;
+   margin-bottom: 10px;
+   margin-left: 10px;
+   margin-right: 10px;
+  }
+
+  h4 {
+    margin-top: 10px;
+  }
+
+  #cells-p {
+    display: inline-block;
+  }
+
+  #question-mark{
+    border-radius: 50px;
+    font-weight: bold;
+    border-style: solid;
+    border-width: 2px;
+    border-color: black;
+  }
+
+
   </style>
   <body>
     <div id="app"></div>
@@ -41,15 +68,15 @@
           this.state = {
             mash_temp: 0,
             grain_temp: 0,
-            thickness: 0,
-            tempUnits: "",
+            thickness: 3.25,
+            tempUnits: "°F",
             result: 0,
           }
         }
 
         render() {
           if(this.state.result !== 0){
-            var result_tag = "Strike Water: " + this.state.result + this.state.tempUnits
+            var result_tag = "Your Strike Water needs to be at " + this.state.result + this.state.tempUnits + " to hit a desired mash temp of " + this.state.mash_temp + this.state.tempUnits
           }
           return(
             <div>
@@ -57,7 +84,6 @@
                 <form>
                   <label> Temperature Units </label>
                     <select onChange={this.updateTempUnit}>
-                      <option value=""> </option>
                       <option value="°F">Fahrenheit</option>
                       <option value="°C">Celsius</option>
                     </select>
@@ -66,30 +92,51 @@
                   <div>
                     <label> Mash Thickness </label>
                     <select onChange={this.updateThickness}>
-                          <option value=""> </option>
                           <option value="Thin">Thin</option>
                           <option value="Average Thickness">Average Thickness</option>
                           <option value="Thick">Thick</option>
                     </select>
                   </div>
                 </form>
-                <button onClick={this.calculateStrikeWater}> Calculate Strike Water Temp </button>
+                <button onClick={this.calculateStrikeWater} type="button" className="btn btn-warning"> Calculate Temperature </button>
               </div>
-              <h4> {result_tag}  </h4>
+              <h4> {result_tag} </h4>
             </div>
           )
         }
-        // ((.4*(strike_temp - grain_temp))/thickness) + strike_temp;
 
         calculateStrikeWater = () => {
-          const calculation = parseFloat(((.4*(this.state.mash_temp - this.state.grain_temp))/this.state.thickness) + this.state.mash_temp)
+
+          const calculation = ((.4*[this.state.mash_temp - this.state.grain_temp])/this.state.thickness)
           const mash_temp = parseFloat(this.state.mash_temp)
-          const value = (mash_temp + calculation).toFixed(1)
-     
+          const result = parseFloat(mash_temp + calculation)
+          const value = result.toFixed(1)
+
+          const value_testing = this.strikeWaterValueTesting(value)
+          if(value_testing === true){
+            return 1;
+          }
+          console.log(value)
+          console.log(typeof value)
+          console.log(typeof this.state.grain_temp)
           this.setState({
             result: value
           })
 
+        }
+        strikeWaterValueTesting = (value) => {
+          if(value < 0){
+            alert("Your mash temperature cannot be negative.")
+            return true;
+          }
+          if(value === "NaN"){
+            alert("Check the value in your mash temp box. Make sure it's a number.")
+            return true; 
+          }
+          if(this.state.grain_temp === ""){
+            alert("Check the value in your grain temp box. Make sure it's a number.")
+            return true;
+          }
         }
         updateTempUnit = (event) => {
           this.setState({
@@ -154,19 +201,19 @@
               <div className="form-group">
                 <form>
                   <label> Unit to Dillute </label>
-                  <input type="text" onChange={this.updateDillutionUnit} placeholder="beer, Iso., pH, etc."/>
+                  <input type="text" onChange={this.updateDillutionUnit} placeholder="beer, Iso., etc."/>
                   <div>
                     <div>
-                    C1: <input type="number" onChange={this.updateC1} placeholder="5"/>
-                    C2: <input type="number" onChange={this.updateC2} placeholder="6"/>
+                    Current Concentration: <span id="question-mark">?</span> <input type="number" onChange={this.updateC1} placeholder="5"/>
+                    Final Concentration: <input type="number" onChange={this.updateC2} placeholder="6"/>
                     </div>
                     <div>
-                    V1: <input type="number" onChange={this.updateV1} placeholder="100"/>
-                    V2: <input type="number" onChange={this.updateV2} placeholder="50"/>
+                    Current Volume: <input type="number" onChange={this.updateV1} placeholder="100"/>
+                    Final Volume: <input type="number" onChange={this.updateV2} placeholder="50"/>
                     </div>
                   </div>
                 </form>
-                <button onClick={this.makeDillution}> Make Dillution! </button>
+                <button onClick={this.makeDillution} type="button" className="btn btn-warning"> Make Dillution! </button>
                 <h4> {result_tag} </h4>
               </div>
             </div>
@@ -174,8 +221,7 @@
         }
         makeDillution = () => {
           if(this.state.volume2 !== "" && this.state.concentration2 !== ""){
-            alert("You must leave either the 2nd concentation or 2nd volume blank")
-            return 1;
+            alert("you must provide values for either C2 or V2")
           }
           else{
             const vol2 = parseFloat(this.state.volume2)
@@ -183,7 +229,13 @@
 
             if(this.state.concentration2 === ""){
               const calculation = ((this.state.concentration1 * vol2)/this.state.volume1).toFixed(1)
-              const value = this.state.concentration1 - (calculation - this.state.concentration1)
+              const value = (this.state.concentration1 - (calculation - this.state.concentration1)).toFixed(1)
+
+              const value_testing = this.DillutionTesting(value)
+              if(value_testing === true){
+                return 1;
+              }
+              
               this.setState({
                 result: value,
                 formula: 1
@@ -191,16 +243,29 @@
             }
             else{
               const calculation = ((this.state.volume1 * con2)/this.state.concentration1).toFixed(1)
-              const value = this.state.volume1 - (calculation - this.state.volume1)
-              console.log(calculation)
-              console.log(this.state.volume1)
+              const value = (this.state.volume1 - (calculation - this.state.volume1)).toFixed(1)
+              const value_testing = this.DillutionTesting(value)
+              if(value_testing === true){
+                return 1;
+              }
+
               this.setState({
                 result: value,
                 formula: 2
               })
             }
           }
-          
+        }
+
+        DillutionTesting = (value) => {
+          if(this.state.concentration1 === "" || this.state.volume1 === ""){
+            alert("You must have both values of Concentration 1 and Volume 1 filled")
+            return true;
+          }
+          else if(value === "NaN"){
+            alert("You must have either C2 or V2 fields filled")
+            return true;
+          }
         }
 
         updateDillutionUnit = (event) => {
@@ -238,13 +303,14 @@
           this.state = {
             plato: 0,
             batch_size: 0,
-            batch_units: "",
-            beer_style: "",
-            gravity_units: "",
+            batch_units: "Gallons",
+            beer_style: "Ale",
+            gravity_units: "Specific Gravity",
+            current_yeast_tag: "Million",
+            current_yeast_abbreviation: 0,
             current_yeast_concentration: 0,
             what_you_need: 0,
             what_you_have: 0,
-            quantity_units: "",
             yeast_needed: 0,
             calculated: false,
             conversionUnit: "Liters"
@@ -256,18 +322,16 @@
             <div>
                 <div className="form-group">
                   <form>
-                    <label>Batch Size Units </label>
+                    <label>Batch Size Units: </label>
                         <select onChange={this.updateBatchUnits}>
-                            <option value=""> </option>
                             <option value="Gallons">Gallons</option>
                             <option value="Barrels">Barrels</option>
                             <option value="Liters">Liters</option>
                         </select>
                     <input onChange={this.updateBatchSize} type="number" placeholder="e.g., 100" />
                     <div>
-                    <label>Gravity Units </label>
+                    <label>Gravity Units: </label>
                         <select onChange={this.updateUnits}>
-                            <option value=""> </option>
                             <option value="Specific Gravity">Specific Gravity</option>
                             <option value="Plato">Plato</option>
                         </select>
@@ -276,18 +340,26 @@
                     <div>
                     <label>Beer Style</label>
                         <select onChange={this.updateStyle}>
-                            <option value=""> </option>
                             <option value="Ale">Ale</option>
                             <option value="Lager">Lager</option>
                         </select>
                     </div>
                     <div>
-                      <p>Amount of cells per mL </p>
-                      <input type="number" onChange={this.updateQuantity} placeholder="e.g., 1000" />
+                      <div>
+                          <div>This next section will require knowing your yeast count per mL. </div>
+                          <div>This number should be on most yeast manufacturing packages, or </div>
+                          <div>can be counted manually. <a href="https://eurekabrewing.wordpress.com/2012/08/03/yeast-basics-counting-yeast-cells/#:~:text=To%20summarize%2C%20the%20best%20way,Simple%20as%20that."> Counting Yeast Cells </a> </div>
+                      </div>
+                      <input type="number" onChange={this.updateQuantity} placeholder="e.g., 2 or 1.5" />
+                      <select onChange={this.updateYeastTag}>
+                          <option value="Million"> Million </option>
+                          <option value="Billion"> Billion </option>
+                      </select>
+                      <p id="cells-p"> cells per mL </p>
                     </div>
                   </form>
-                  <button onClick={this.runCalculation}> Run Calculation </button>
-                  <h1>Quantity Needed: {this.state.yeast_needed} {this.state.conversionUnit} </h1>
+                  <button onClick={this.runCalculation} type="button" className="btn btn-warning"> Run Calculation </button>
+                  <h4>Quantity Needed: {this.state.yeast_needed} {this.state.conversionUnit} </h4>
                   <label> Convert </label>
                         <select onChange={this.updateFinalConversion}>
                             <option value="Liters">Liters</option>
@@ -304,8 +376,19 @@
           const yeast_value = this.convertBatchSize();
           const grav_value = this.convertGravity();
           const style_value = this.cellsbyStyle();
+          const yeast_amount = this.calculateYeastConcentration();
           const needed_amount = (yeast_value * grav_value * style_value).toFixed(0)
-          const final_value_in_liters = ((needed_amount/this.state.current_yeast_concentration)/1000).toFixed(1)
+          const final_value_in_liters = ((needed_amount/yeast_amount)/1000).toFixed(1)
+          const value_testing = this.value_testing(final_value_in_liters);
+          if(value_testing === true){
+            alert("Make sure that your values are not negative!")
+            return 1;
+          }
+          console.log(final_value_in_liters)
+          if(final_value_in_liters === "NaN" || yeast_amount === 0){
+            alert("Make sure that all fields are filled out!")
+            return 1;
+          }
           
            this.setState({
             what_you_need: needed_amount,
@@ -314,6 +397,12 @@
             calculated: true
           })
 
+        }
+
+        value_testing = (a) => {
+          if(a < 0){
+            return true;
+          }
         }
 
         updateFinalConversion = (event) => {
@@ -356,7 +445,13 @@
 
         updateQuantity = (event) => {
           this.setState({
-            current_yeast_concentration: event.target.value
+            current_yeast_abbreviation: event.target.value
+          })
+        }
+
+        updateYeastTag = (event) => {
+          this.setState({
+            current_yeast_tag: event.target.value
           })
         }
 
@@ -417,7 +512,7 @@
         }
 
         cellsbyStyle = () => {
-          if(this.state.plato > 16 || this.state.beer_style === "Lager"){
+          if(this.state.plato >= 16 || this.state.beer_style === "Lager"){
             const value = 1500000
             return value;
            
@@ -426,6 +521,18 @@
             const value = 1000000
             return value;
            
+          }
+        }
+
+        calculateYeastConcentration = () => {
+          if(this.state.current_yeast_tag === "Million"){
+            const value = this.state.current_yeast_abbreviation * 1000000
+            console.log(value)
+            return value;
+          }
+          else{
+            const value = this.state.current_yeast_abbreviation * 100000000
+            return value;
           }
         }
       }
@@ -438,7 +545,7 @@
           this.state = {
             OG: "",
             FG: "",
-            format: "",
+            format: "Specific Gravity",
             estimated_abv: 0 + "%"
 
           }
@@ -452,16 +559,17 @@
                     <div className="form-group">
                       <label>Measurement System: </label>
                         <select id="conversion-type" onChange={this.updateResponse}>
-                            <option value=""> </option>
                             <option value="Specific Gravity">Specific Gravity</option>
                             <option value="Plato">Plato</option>
                         </select>
                       </div>
-                    <input onChange={this.updateVal1} id="numer-box" type="number" placeholder="Starting Gravity" value={this.state.OG}/>
-                    <input onChange={this.updateVal2} id="numer-box" type="number" placeholder= "Estimated Final Gravity" value={this.state.FG}/>
+                    <label> Starting Gravity: </label>
+                    <input onChange={this.updateVal1} id="numer-box" type="number" placeholder="e.g., 1.048 or 12 " value={this.state.OG}/>
+                    <label> Estimated Final Gravity: </label>
+                    <input onChange={this.updateVal2} id="numer-box" type="number" placeholder= "e.g., 1.008 or 2" value={this.state.FG}/>
                   </form>
                 </div>
-                <button onClick ={this.calculateEstimatedABV}> Calculate Estimated ABV </button>
+                <button onClick ={this.calculateEstimatedABV} type="button" className="btn btn-warning"> Calculate Estimated ABV </button>
                 <h1> {this.state.estimated_abv} </h1>
             </div>
           )
@@ -487,7 +595,23 @@
           })
         }
 
+        ABVvalueTesting = (value) => {
+          if(value < 0){
+            alert("Check your input values. You cannot have less than 0 as a result")
+            return true;
+          }
+          else if(value === "NaN"){
+            alert("Check your input values. Make sure that they are actual numbers")
+            return true;
+          }
+          else if(this.state.OG === "" || this.state.FG === ""){
+            alert("Something is wrong with your input values.")
+            return true;
+          }
+        }
+
         calculateEstimatedABV = () => {
+        
           if(this.state.format === "Plato"){
             const OGarray = ["1.0"];
             const FGarray = ["1.0"];
@@ -499,18 +623,21 @@
               FGarray.push("0")
             }
             FGarray.push(plato_value2);
-            console.log(OGarray)
 
             const val1 = OGarray.join('');
             const val2 = FGarray.join('');
-            console.log(val1)
-            console.log(typeof val1)
 
             const value1 = parseFloat(val1)
             const value2 = parseFloat(val2)
             const value3 = (value1 - value2) * 131.5;
        
             const final_value = value3.toFixed(1) + "%"
+
+            const value_testing = this.ABVvalueTesting(value3)
+            if(value_testing === true){
+              return 1;
+            }
+          
             this.setState({
             estimated_abv: final_value
           })
@@ -520,6 +647,11 @@
             const value1 = parseFloat(this.state.OG);
             const value2 = parseFloat(this.state.FG);
             const value3 = (value1 - value2) * 131.5;
+
+            const value_testing = this.ABVvalueTesting(value3)
+            if(value_testing === true){
+              return 1;
+            }
 
             const final_value = value3.toFixed(1) + "%"
             this.setState({
@@ -567,22 +699,21 @@
             default:
               var calculationView = ""
           }
-
             return (
-                <div id="main-box">
+                <div className="main-box">
                     <h1>Wort Witch</h1>
                     <form>
-                      <div className="form-group">
-                      <label>Calculation:</label>
-                        <select id="calculation-view" onChange={this.updateResponse}>
-                            <option value=""> </option>
-                            <option value="Dillution">Dillution</option>
-                            <option value="Yeast Needed">Yeast Pitch Amount</option>
-                            <option value="Strike Water">Strike Water</option>
-                            <option value="Estimated ABV">Estimated ABV</option>
-                            <option value="Combination">Combination</option>
-                        </select>
-                      </div>
+                        <div className="form-group">
+                        <label>Calculation:</label>
+                          <select id="calculation-view" onChange={this.updateResponse}>
+                              <option value=""> </option>
+                              <option value="Dillution">Dillution</option>
+                              <option value="Yeast Needed">Yeast Pitch Amount</option>
+                              <option value="Strike Water">Strike Water</option>
+                              <option value="Estimated ABV">Estimated ABV</option>
+                              <option value="Combination">Combination</option>
+                          </select>
+                        </div>
                     </form>
                     <h2>{this.state.view} </h2>
                     <div>
@@ -605,8 +736,4 @@
   </body>
 </html>
 
-<!-- A few different features -->
-<!-- Estimated ABV  -->
-<!-- amount of yeat needed -->
-<!-- dillution formula -->
-<!-- strike water -->
+
